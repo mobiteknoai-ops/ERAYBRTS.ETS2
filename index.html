@@ -3,496 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERAYBRTS.ETS2 - ETS2 Mod & İndirme Merkezi</title>
-    <!-- Tailwind CSS CDN -->
+    <title>ERAYBRTS.ETS2 - Mod İndirme Merkezi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter & Orbitron -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            red: '#e50914',
-                            orange: '#ff5500',
-                            dark: '#0f1015',
-                            card: '#181a20',
-                            cardHover: '#22252e',
-                            border: '#2a2e39'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Orbitron', 'sans-serif'],
-                    }
-                }
-            }
-        }
+    <script type="module">
+        // Firebase Cloud Firestore Entegrasyonu
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForDemoPurposes12345",
+            authDomain: "eraybrts-ets2.firebaseapp.com",
+            projectId: "eraybrts-ets2",
+            storageBucket: "eraybrts-ets2.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456:web:abcdef"
+        };
+
+        // Not: Gerçek projede kendi Firebase config bilgilerinizle güncelleyebilirsiniz.
+        // Şimdilik yerel tarayıcı hafızası (localStorage) ile bulut simülasyonu çalışmaktadır.
     </script>
     <style>
-        body {
-            background-color: #0b0c10;
-            color: #e0e0e0;
-        }
-        .glow-effect {
-            box-shadow: 0 0 20px rgba(255, 85, 0, 0.25);
-        }
-        .glow-effect:hover {
-            box-shadow: 0 0 30px rgba(255, 85, 0, 0.45);
-        }
-        .custom-gradient-text {
-            background: linear-gradient(135deg, #ff5500 0%, #e50914 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
+        .heading-font { font-family: 'Rajdhani', sans-serif; }
+        .glass-card { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glow-btn:hover { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-brand-orange selection:text-white">
+<body class="min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
 
-    <!-- Navbar -->
-    <nav class="bg-brand-card/80 backdrop-blur-md border-b border-brand-border sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <!-- Logo -->
-                <div class="flex items-center gap-3 cursor-pointer" onclick="filterCategory('all')">
-                    <div class="bg-gradient-to-r from-brand-orange to-brand-red p-2.5 rounded-xl shadow-lg">
-                        <i class="fa-solid fa-truck-fast text-white text-2xl"></i>
-                    </div>
-                    <div>
-                        <span class="font-display font-black text-xl sm:text-2xl tracking-wider text-white">ERAYBRTS<span class="text-brand-orange">.ETS2</span></span>
-                        <p class="text-xs text-gray-400 font-semibold tracking-widest uppercase">Eray Bertaş Official</p>
-                    </div>
+    <!-- Üst Menü -->
+    <header class="sticky top-0 z-40 glass-card border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-truck-fast text-xl"></i>
                 </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden md:flex items-center space-x-6 text-sm font-medium">
-                    <button onclick="filterCategory('all')" class="text-gray-300 hover:text-brand-orange transition-colors">Tüm Modlar</button>
-                    <button onclick="filterCategory('otobus')" class="text-gray-300 hover:text-brand-orange transition-colors">Otobüsler</button>
-                    <button onclick="filterCategory('cekici')" class="text-gray-300 hover:text-brand-orange transition-colors">Çekiciler/Tırlar</button>
-                    <button onclick="filterCategory('harita')" class="text-gray-300 hover:text-brand-orange transition-colors">Haritalar</button>
-                    <button onclick="filterCategory('grafik')" class="text-gray-300 hover:text-brand-orange transition-colors">Grafik & Seste</button>
-                </div>
-
-                <!-- Youtube Channel Link Button & Admin Toggle -->
-                <div class="flex items-center gap-3">
-                    <button onclick="openAdminModal()" title="Yönetici Girişi" class="bg-brand-dark hover:bg-brand-border text-gray-400 hover:text-brand-orange border border-brand-border p-2.5 rounded-xl transition-all">
-                        <i class="fa-solid fa-user-gear text-lg"></i>
-                    </button>
-                    <a href="https://www.youtube.com/@ERAYBERTAS" target="_blank" rel="noopener noreferrer" 
-                       class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-red-600/30">
-                        <i class="fa-brands fa-youtube text-lg"></i>
-                        <span class="hidden sm:inline">Kanalıma Git</span>
-                    </a>
+                <div>
+                    <span class="text-2xl font-bold heading-font tracking-wider bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">ERAYBRTS.ETS2</span>
+                    <span class="block text-xs text-gray-400 font-medium">Resmi Mod İndirme Platformu</span>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Hero Banner -->
-    <header class="relative bg-gradient-to-b from-brand-card to-brand-dark py-12 px-4 sm:px-6 lg:px-8 border-b border-brand-border overflow-hidden">
-        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#ff5500_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div class="max-w-4xl mx-auto text-center relative z-10">
-            <span class="inline-block bg-brand-orange/10 text-brand-orange border border-brand-orange/30 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
-                🚚 Official Download Hub
-            </span>
-            <h1 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4">
-                ERAY BERTAS <span class="custom-gradient-text">ETS2 MOD & İNDİRME</span> MERKEZİ
-            </h1>
-            <p class="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto mb-8">
-                YouTube videolarımda kullandığım tüm otobüs, tır, harita ve grafik modlarının güvenli indirme bağlantılarına buradan ulaşabilirsiniz.
-            </p>
-
-            <!-- Search Bar -->
-            <div class="max-w-xl mx-auto relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="searchInput" onkeyup="searchMods()" placeholder="Mod adı, otobüs modeli veya harita ara..." 
-                       class="w-full bg-brand-dark/90 border border-brand-border text-white pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:border-brand-orange transition-all shadow-inner placeholder-gray-500">
+            <div class="flex items-center space-x-3">
+                <a href="https://www.youtube.com/@ERAYBERTAS" target="_blank" class="hidden sm:flex items-center space-x-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl border border-red-500/30 transition-all font-medium text-sm">
+                    <i class="fa-brands fa-youtube text-lg"></i>
+                    <span>Kanalıma Git</span>
+                </a>
+                <button onclick="openAdminModal()" class="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2 rounded-xl border border-gray-700 transition-all font-medium text-sm">
+                    <i class="fa-solid fa-gear text-blue-400"></i>
+                    <span class="hidden md:inline">Yönetici Paneli</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Category Selector (Mobile Friendly) -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6">
-        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            <button onclick="filterCategory('all')" class="cat-btn active bg-brand-orange text-white px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all">Tümü</button>
-            <button onclick="filterCategory('otobus')" class="cat-btn bg-brand-card hover:bg-brand-cardHover text-gray-300 border border-brand-border px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all">🚌 Otobüs Modları</button>
-            <button onclick="filterCategory('cekici')" class="cat-btn bg-brand-card hover:bg-brand-cardHover text-gray-300 border border-brand-border px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all">🚛 Tır & Çekici Modları</button>
-            <button onclick="filterCategory('harita')" class="cat-btn bg-brand-card hover:bg-brand-cardHover text-gray-300 border border-brand-border px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all">🗺️ Harita Modları</button>
-            <button onclick="filterCategory('grafik')" class="cat-btn bg-brand-card hover:bg-brand-cardHover text-gray-300 border border-brand-border px-5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all">🎨 Grafik & Ses</button>
+    <!-- Ana İçerik -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Hero Bölümü -->
+        <div class="relative rounded-3xl overflow-hidden mb-10 p-8 sm:p-12 glass-card border border-blue-500/20 bg-gradient-to-r from-blue-950/40 via-gray-900/60 to-indigo-950/40">
+            <div class="relative z-10 max-w-2xl">
+                <span class="bg-blue-500/20 text-blue-400 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-500/30">ETS2 V1.50+ Uyumlu</span>
+                <h1 class="text-3xl sm:text-5xl font-bold heading-font mt-4 mb-3 tracking-tight">En Kaliteli Modlar ve Yamalar</h1>
+                <p class="text-gray-400 text-sm sm:text-base mb-6">Eray Bertaş YouTube kanalında incelediğim tüm özel otobüs, tır, harita ve grafik modlarını tek tıkla güvenle indirebilirsiniz.</p>
+                
+                <!-- Arama ve Filtre -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="searchInput" oninput="filterMods()" placeholder="Mod adı veya özellik ara..." class="w-full bg-gray-900/80 border border-gray-700 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    <select id="categoryFilter" onchange="filterMods()" class="bg-gray-900/80 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-all text-gray-300">
+                        <option value="all">Tüm Kategoriler</option>
+                        <option value="Otobüs">Otobüs</option>
+                        <option value="Tır">Tır (Çekici)</option>
+                        <option value="Harita">Harita</option>
+                        <option value="Grafik">Grafik / Ses</option>
+                    </select>
+                </div>
+            </div>
         </div>
-    </section>
 
-    <!-- Mods List Grid -->
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 w-full">
+        <!-- Mod Listesi Grid -->
         <div id="modsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Mod Cards generated via JavaScript -->
+            <!-- Modlar buraya dinamik eklenecek -->
         </div>
 
-        <!-- No Results Found -->
+        <!-- Boş Durum -->
         <div id="noResults" class="hidden text-center py-16">
-            <i class="fa-solid fa-box-open text-5xl text-gray-600 mb-4"></i>
-            <h3 class="text-xl font-bold text-gray-300">Aradığınız mod bulunamadı!</h3>
-            <p class="text-gray-500 mt-1">Lütfen farklı bir kelime arayın veya kategorileri kontrol edin.</p>
+            <div class="text-gray-600 text-5xl mb-4"><i class="fa-solid fa-box-open"></i></div>
+            <h3 class="text-lg font-semibold text-gray-300">Henüz mod eklenmemiş</h3>
+            <p class="text-sm text-gray-500 mt-1">Sağ üstteki Yönetici Paneli'nden ilk modu ekleyebilirsiniz.</p>
         </div>
     </main>
 
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card border border-brand-border w-full max-w-xl rounded-2xl p-6 relative shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-
-            <!-- Login Section -->
-            <div id="adminLoginSection">
-                <div class="text-center mb-6">
-                    <div class="w-14 h-14 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-brand-orange/30">
-                        <i class="fa-solid fa-lock text-brand-orange text-xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white">Yönetici Girişi</h3>
-                    <p class="text-gray-400 text-xs mt-1">Yeni mod ve indirme bağlantısı eklemek için şifrenizi girin.</p>
-                </div>
-
-                <form onsubmit="handleAdminLogin(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-1">Yönetici Şifresi</label>
-                        <input type="password" id="adminPassword" placeholder="Şifrenizi girin..." required
-                               class="w-full bg-brand-dark border border-brand-border text-white px-4 py-3 rounded-xl focus:outline-none focus:border-brand-orange">
-                    </div>
-                    <div id="loginError" class="text-red-500 text-xs hidden">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Hatalı şifre! Lütfen tekrar deneyin.
-                    </div>
-                    <button type="submit" class="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-bold py-3 rounded-xl shadow-lg transition-all">
-                        Giriş Yap
-                    </button>
-                    <p class="text-center text-xs text-gray-500 mt-2">Varsayılan şifre: <span class="text-brand-orange font-mono">eray123</span></p>
-                </form>
-            </div>
-
-            <!-- Admin Add Mod Form Section -->
-            <div id="adminFormSection" class="hidden">
-                <div class="flex items-center justify-between pb-4 border-b border-brand-border mb-6">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-plus-circle text-brand-orange text-xl"></i>
-                        <h3 class="text-xl font-bold text-white">Yeni Mod Linki Ekle</h3>
-                    </div>
-                    <button onclick="adminLogout()" class="text-xs text-red-400 hover:underline">Çıkış Yap</button>
-                </div>
-
-                <form onsubmit="addNewMod(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-1">Mod Adı / Başlığı</label>
-                        <input type="text" id="newTitle" placeholder="Örn: Travego 15 SHD Özel Skin Paketi" required
-                               class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-400 mb-1">Kategori</label>
-                            <select id="newCategory" required class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                                <option value="otobus">🚌 Otobüs Modu</option>
-                                <option value="cekici">🚛 Tır / Çekici Modu</option>
-                                <option value="harita">🗺️ Harita Modu</option>
-                                <option value="grafik">🎨 Grafik & Ses</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-400 mb-1">Oyun Sürümü</label>
-                            <input type="text" id="newVersion" placeholder="Örn: 1.50 - 1.51" required
-                                   class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-400 mb-1">Yapımcı / Coder</label>
-                            <input type="text" id="newAuthor" placeholder="Örn: Eray Bertaş" value="Eray Bertaş" required
-                                   class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-400 mb-1">Rozet / Etiket</label>
-                            <input type="text" id="newBadge" placeholder="Örn: YENİ, POPÜLER, ÖNERİLEN" value="YENİ" required
-                                   class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-1">Görsel URL Bağlantısı</label>
-                        <input type="url" id="newImage" placeholder="https://images.unsplash.com/..." required
-                               class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-1">İndirme Linki (Sharemods/Mediafire vb.)</label>
-                        <input type="url" id="newDownloadUrl" placeholder="https://..." required
-                               class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-1">YouTube Video İnceleme Linki</label>
-                        <input type="url" id="newYoutubeUrl" placeholder="https://youtube.com/watch?v=..." required
-                               class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-1">Açıklama</label>
-                        <textarea id="newDescription" rows="2" placeholder="Mod özellikleri, yapılan güncellemeler..." required
-                                  class="w-full bg-brand-dark border border-brand-border text-white px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-brand-orange"></textarea>
-                    </div>
-
-                    <button type="submit" class="w-full bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange/90 hover:to-brand-red/90 text-white font-bold py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Modu Sitede Yayınla
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Download Modal -->
-    <div id="downloadModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-brand-card border border-brand-border w-full max-w-lg rounded-2xl p-6 relative shadow-2xl">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-            
-            <div class="text-center">
-                <div class="w-16 h-16 bg-brand-orange/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-orange/30">
-                    <i class="fa-solid fa-download text-brand-orange text-2xl"></i>
-                </div>
-                <h3 id="modalTitle" class="text-2xl font-bold text-white mb-2">Mod İndirme</h3>
-                <p id="modalDesc" class="text-gray-400 text-sm mb-6">İndirme bağlantınız hazırlanıyor. Lütfen bekleyin veya aşağıdaki butona tıklayın.</p>
-                
-                <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border mb-6 text-left">
-                    <div class="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>Sürüm Uyumluluğu:</span>
-                        <span id="modalVer" class="text-brand-orange font-bold">1.49 / 1.50</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-400">
-                        <span>Yapımcı / Coder:</span>
-                        <span id="modalAuthor" class="text-gray-200">Eray Bertaş / Topluluk</span>
-                    </div>
-                </div>
-
-                <a id="modalDownloadLink" href="#" target="_blank" rel="noopener noreferrer"
-                   class="block w-full bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange/90 hover:to-brand-red/90 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all text-center">
-                    <i class="fa-solid fa-file-arrow-down mr-2"></i> İndirmeyi Başlat
-                </a>
-                
-                <p class="text-xs text-gray-500 mt-4">
-                    <i class="fa-solid fa-shield-halved text-green-500 mr-1"></i> Tüm linkler güvenli virüs taramasından geçmiştir.
-                </p>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
-    <footer class="bg-brand-card border-t border-brand-border py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:flex sm:justify-between sm:items-center">
-            <div class="mb-4 sm:mb-0">
-                <p class="font-display font-bold text-lg text-white">ERAYBRTS<span class="text-brand-orange">.ETS2</span></p>
-                <p class="text-xs text-gray-500">© 2026 Eray Bertaş. Tüm hakları saklıdır. Euro Truck Simulator 2, SCS Software markasıdır.</p>
-            </div>
-            <div class="flex justify-center gap-4">
-                <a href="https://www.youtube.com/@ERAYBERTAS" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-brand-dark hover:bg-brand-orange rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all border border-brand-border">
-                    <i class="fa-brands fa-youtube"></i>
-                </a>
-                <a href="#" class="w-10 h-10 bg-brand-dark hover:bg-brand-orange rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all border border-brand-border">
-                    <i class="fa-brands fa-instagram"></i>
-                </a>
-                <a href="#" class="w-10 h-10 bg-brand-dark hover:bg-brand-orange rounded-xl flex items-center justify-center text-gray-300 hover:text-white transition-all border border-brand-border">
-                    <i class="fa-brands fa-discord"></i>
-                </a>
-            </div>
+    <footer class="glass-card border-t border-gray-800 py-8 mt-12 text-center text-sm text-gray-500">
+        <p>© 2026 ERAYBRTS.ETS2 - Tüm Hakları Saklıdır.</p>
+        <div class="flex justify-center space-x-6 mt-3">
+            <a href="https://www.youtube.com/@ERAYBERTAS" target="_blank" class="hover:text-red-500 transition-colors"><i class="fa-brands fa-youtube text-lg"></i> YouTube Kanalı</a>
         </div>
     </footer>
 
-    <!-- JavaScript Data and Controller Logic -->
-    <script>
-        // Sample Mods Database (Cleared for admin customization)
-        const modsData = [];
+    <!-- Yönetici Giriş / Ekleme Modalı -->
+    <div id="adminModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-gray-700 relative shadow-2xl">
+            <button onclick="closeAdminModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            
+            <!-- Şifre Ekranı -->
+            <div id="loginView">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="bg-blue-600 p-2.5 rounded-xl text-white"><i class="fa-solid fa-lock text-lg"></i></div>
+                    <div>
+                        <h2 class="text-xl font-bold heading-font">Yönetici Girişi</h2>
+                        <p class="text-xs text-gray-400">Mod eklemek için şifrenizi girin</p>
+                    </div>
+                </div>
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Yönetici Şifresi</label>
+                        <input type="password" id="adminPassword" required placeholder="Şifreniz (eray123)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-all glow-btn">Giriş Yap</button>
+                    <p class="text-xs text-gray-500 text-center mt-2">Varsayılan şifre: <code class="text-blue-400">eray123</code></p>
+                </form>
+            </div>
 
-        let currentCategory = 'all';
+            <!-- Mod Ekleme Paneli -->
+            <div id="dashboardView" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-green-600 p-2.5 rounded-xl text-white"><i class="fa-solid fa-plus text-lg"></i></div>
+                        <div>
+                            <h2 class="text-xl font-bold heading-font">Mod Ekleme Paneli</h2>
+                            <p class="text-xs text-gray-400">Yeni mod ve indirme linki ekle</p>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="text-xs text-red-400 hover:underline">Çıkış Yap</button>
+                </div>
+
+                <form onsubmit="handleAddMod(event)" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Mod Adı</label>
+                        <input type="text" id="modName" required placeholder="Örn: Setra S 515 HD v2.5" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
+                            <select id="modCategory" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-gray-300">
+                                <option value="Otobüs">Otobüs</option>
+                                <option value="Tır">Tır (Çekici)</option>
+                                <option value="Harita">Harita</option>
+                                <option value="Grafik">Grafik / Ses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Oyun Sürümü</label>
+                            <input type="text" id="modVersion" required placeholder="Örn: v1.50 - v1.51" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">İndirme Linki (ShareMods / Google Drive vb.)</label>
+                        <input type="url" id="modDownloadLink" required placeholder="https://sharemods.com/..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">YouTube Video Linki (İnceleme)</label>
+                        <input type="url" id="modVideoLink" placeholder="https://youtube.com/watch?v=..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Açıklama / Özellikler</label>
+                        <textarea id="modDescription" rows="3" required placeholder="Modun özellikleri hakkında kısa bilgi..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-3 rounded-xl transition-all glow-btn">Modu Sitede Yayınla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Oynatıcı Modalı -->
+    <div id="videoModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl aspect-video bg-black rounded-3xl overflow-hidden border border-gray-800 shadow-2xl">
+            <button onclick="closeVideoModal()" class="absolute top-4 right-4 z-10 bg-gray-900/80 hover:bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <iframe id="youtubePlayer" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <!-- JavaScript İşlevselliği -->
+    <script>
+        let mods = JSON.parse(localStorage.getItem('eraybrts_mods')) || [];
         let isAdminLoggedIn = false;
 
-        // Render Mods Function
-        function renderMods(mods) {
+        function saveModsToStorage() {
+            localStorage.setItem('eraybrts_mods', JSON.stringify(mods));
+        }
+
+        function renderMods(modsToRender = mods) {
             const grid = document.getElementById('modsGrid');
             const noResults = document.getElementById('noResults');
+            
+            if (!grid) return;
             grid.innerHTML = '';
 
-            if (mods.length === 0) {
+            if (modsToRender.length === 0) {
                 noResults.classList.remove('hidden');
                 return;
-            } else {
-                noResults.classList.add('hidden');
             }
+            noResults.classList.add('hidden');
 
-            mods.forEach(mod => {
+            modsToRender.forEach((mod, index) => {
                 const card = document.createElement('div');
-                card.className = "bg-brand-card hover:bg-brand-cardHover border border-brand-border rounded-2xl overflow-hidden transition-all duration-300 flex flex-col group glow-effect";
+                card.className = 'glass-card rounded-2xl p-6 flex flex-col justify-between border border-gray-800 hover:border-blue-500/50 transition-all group';
                 
+                let deleteBtnHtml = isAdminLoggedIn ? `<button onclick="deleteMod(${index})" class="bg-red-500/20 hover:bg-red-600 text-red-400 hover:text-white p-2 rounded-xl transition-all border border-red-500/30" title="Modu Sil"><i class="fa-solid fa-trash-can"></i></button>` : '';
+
+                let videoBtnHtml = mod.videoLink ? `<button onclick="openVideoModal('${mod.videoLink}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2.5 px-4 rounded-xl text-sm font-medium transition-all text-center border border-gray-700 flex items-center justify-center space-x-2"><i class="fa-brands fa-youtube text-red-500"></i><span>İncele</span></button>` : '';
+
                 card.innerHTML = `
-                    <div class="relative overflow-hidden h-48">
-                        <img src="${mod.image}" alt="${mod.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        <span class="absolute top-3 left-3 bg-brand-orange text-white text-xs font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider shadow">
-                            ${mod.badge}
-                        </span>
-                        <span class="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-gray-300 text-xs px-2.5 py-1 rounded-md font-mono border border-white/10">
-                            v${mod.version}
-                        </span>
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="bg-blue-500/10 text-blue-400 text-xs font-semibold px-2.5 py-1 rounded-lg border border-blue-500/20">${mod.category}</span>
+                                <span class="text-xs text-gray-400 ml-2"><i class="fa-solid fa-gamepad"></i> ${mod.version}</span>
+                            </div>
+                            ${deleteBtnHtml}
+                        </div>
+                        <h3 class="text-lg font-bold heading-font text-white group-hover:text-blue-400 transition-colors mb-2">${mod.name}</h3>
+                        <p class="text-gray-400 text-sm mb-4 line-clamp-3">${mod.description}</p>
                     </div>
-                    <div class="p-5 flex-1 flex flex-col justify-between">
-                        <div>
-                            <h3 class="text-lg font-bold text-white group-hover:text-brand-orange transition-colors line-clamp-1 mb-2">
-                                ${mod.title}
-                            </h3>
-                            <p class="text-gray-400 text-xs line-clamp-2 mb-4 leading-relaxed">
-                                ${mod.description}
-                            </p>
-                        </div>
-                        <div>
-                            <div class="flex items-center justify-between text-xs text-gray-500 mb-4 pt-3 border-t border-brand-border/60">
-                                <span>Yapımcı: <strong class="text-gray-300">${mod.author}</strong></span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <a href="${mod.youtubeUrl}" target="_blank" rel="noopener noreferrer" 
-                                   class="flex items-center justify-center gap-1.5 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-600/20 py-2.5 rounded-xl font-semibold text-xs transition-all">
-                                    <i class="fa-brands fa-youtube"></i> İncele
-                                </a>
-                                <button onclick="openModal('${mod.title.replace(/'/g, "\\'")}', '${mod.description.replace(/'/g, "\\'")}', '${mod.version}', '${mod.author}', '${mod.downloadUrl}')" 
-                                        class="flex items-center justify-center gap-1.5 bg-brand-orange hover:bg-brand-orange/90 text-white py-2.5 rounded-xl font-semibold text-xs transition-all shadow-md">
-                                    <i class="fa-solid fa-download"></i> İndir
-                                </button>
-                            </div>
-                        </div>
+                    <div class="flex items-center gap-2 pt-4 border-t border-gray-800/80">
+                        <a href="${mod.downloadLink}" target="_blank" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-xl text-sm font-semibold transition-all text-center glow-btn flex items-center justify-center space-x-2"><i class="fa-solid fa-download"></i><span>İndir</span></a>
+                        ${videoBtnHtml}
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        // Admin Panel Functions
-        function openAdminModal() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            if (isAdminLoggedIn) {
-                document.getElementById('adminLoginSection').classList.add('hidden');
-                document.getElementById('adminFormSection').classList.remove('hidden');
-            } else {
-                document.getElementById('adminLoginSection').classList.remove('hidden');
-                document.getElementById('adminFormSection').classList.add('hidden');
-            }
-        }
+        function filterMods() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
 
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.add('hidden');
-            document.getElementById('loginError').classList.add('hidden');
-        }
-
-        function handleAdminLogin(event) {
-            event.preventDefault();
-            const pass = document.getElementById('adminPassword').value;
-            // Password check (Default: eray123)
-            if (pass === 'eray123') {
-                isAdminLoggedIn = true;
-                document.getElementById('adminPassword').value = '';
-                document.getElementById('loginError').classList.add('hidden');
-                document.getElementById('adminLoginSection').classList.add('hidden');
-                document.getElementById('adminFormSection').classList.remove('hidden');
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        }
-
-        function adminLogout() {
-            isAdminLoggedIn = false;
-            document.getElementById('adminFormSection').classList.add('hidden');
-            document.getElementById('adminLoginSection').classList.remove('hidden');
-        }
-
-        function addNewMod(event) {
-            event.preventDefault();
-            const newMod = {
-                id: Date.now(),
-                title: document.getElementById('newTitle').value,
-                category: document.getElementById('newCategory').value,
-                image: document.getElementById('newImage').value,
-                version: document.getElementById('newVersion').value,
-                author: document.getElementById('newAuthor').value,
-                badge: document.getElementById('newBadge').value,
-                youtubeUrl: document.getElementById('newYoutubeUrl').value,
-                downloadUrl: document.getElementById('newDownloadUrl').value,
-                description: document.getElementById('newDescription').value
-            };
-
-            // Add new mod to beginning of array
-            modsData.unshift(newMod);
-            applyFilters();
-            
-            // Reset form & close modal
-            event.target.reset();
-            document.getElementById('newAuthor').value = 'Eray Bertaş';
-            document.getElementById('newBadge').value = 'YENİ';
-            closeAdminModal();
-        }
-
-        // Category Filter Logic
-        function filterCategory(category) {
-            currentCategory = category;
-            
-            // Update active button styling
-            const buttons = document.querySelectorAll('.cat-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('bg-brand-orange', 'text-white');
-                btn.classList.add('bg-brand-card', 'text-gray-300');
-            });
-
-            // Highlight selected button
-            event.currentTarget?.classList?.add('bg-brand-orange', 'text-white');
-            event.currentTarget?.classList?.remove('bg-brand-card', 'text-gray-300');
-
-            applyFilters();
-        }
-
-        // Search Filter Logic
-        function searchMods() {
-            applyFilters();
-        }
-
-        // Combined Filter Application
-        function applyFilters() {
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-            
-            const filtered = modsData.filter(mod => {
-                const matchesCategory = (currentCategory === 'all' || mod.category === currentCategory);
-                const matchesSearch = mod.title.toLowerCase().includes(searchQuery) || 
-                                      mod.description.toLowerCase().includes(searchQuery);
-                return matchesCategory && matchesSearch;
+            const filtered = mods.filter(mod => {
+                const matchesQuery = mod.name.toLowerCase().includes(query) || mod.description.toLowerCase().includes(query);
+                const matchesCategory = category === 'all' || mod.category === category;
+                return matchesQuery && matchesCategory;
             });
 
             renderMods(filtered);
         }
 
-        // Modal Functions
-        function openModal(title, desc, ver, author, downloadLink) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalDesc').innerText = desc;
-            document.getElementById('modalVer').innerText = ver;
-            document.getElementById('modalAuthor').innerText = author;
-            document.getElementById('modalDownloadLink').href = downloadLink;
-            
-            document.getElementById('downloadModal').classList.remove('hidden');
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            if (isAdminLoggedIn) {
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('dashboardView').classList.remove('hidden');
+            } else {
+                document.getElementById('loginView').classList.remove('hidden');
+                document.getElementById('dashboardView').classList.add('hidden');
+            }
         }
 
-        function closeModal() {
-            document.getElementById('downloadModal').classList.add('hidden');
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
         }
 
-        // Initialize Page
-        window.onload = function() {
-            renderMods(modsData);
+        function handleLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === 'eray123') {
+                isAdminLoggedIn = true;
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('dashboardView').classList.remove('hidden');
+                renderMods();
+            } else {
+                alert('Hatalı şifre! (Varsayılan şifre: eray123)');
+            }
+        }
+
+        function handleLogout() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+            renderMods();
+        }
+
+        function handleAddMod(e) {
+            e.preventDefault();
+            const newMod = {
+                name: document.getElementById('modName').value,
+                category: document.getElementById('modCategory').value,
+                version: document.getElementById('modVersion').value,
+                downloadLink: document.getElementById('modDownloadLink').value,
+                videoLink: document.getElementById('modVideoLink').value,
+                description: document.getElementById('modDescription').value
+            };
+
+            mods.unshift(newMod);
+            saveModsToStorage();
+            renderMods();
+            closeAdminModal();
+            e.target.reset();
+            alert('Mod başarıyla eklendi ve yayınlandı!');
+        }
+
+        function deleteMod(index) {
+            if (confirm('Bu modu silmek istediğinize emin misiniz?')) {
+                mods.splice(index, 1);
+                saveModsToStorage();
+                renderMods();
+            }
+        }
+
+        function openVideoModal(url) {
+            let embedUrl = '';
+            if (url.includes('youtu.be/')) {
+                const id = url.split('youtu.be/')[1].split('?')[0];
+                embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
+            } else if (url.includes('watch?v=')) {
+                const id = url.split('watch?v=')[1].split('&')[0];
+                embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
+            } else if (url.includes('shorts/')) {
+                const id = url.split('shorts/')[1].split('?')[0];
+                embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1`;
+            } else {
+                embedUrl = url;
+            }
+
+            document.getElementById('youtubePlayer').src = embedUrl;
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('youtubePlayer').src = '';
+            document.getElementById('videoModal').classList.add('hidden');
+        }
+
+        // Sayfa açıldığında modları yükle
+        window.onload = () => {
+            renderMods();
         };
     </script>
 </body>
