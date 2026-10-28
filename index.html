@@ -6,23 +6,6 @@
     <title>ERAYBRTS.ETS2 - Mod İndirme Merkezi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="module">
-        // Firebase Cloud Firestore Entegrasyonu
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDummyKeyForDemoPurposes12345",
-            authDomain: "eraybrts-ets2.firebaseapp.com",
-            projectId: "eraybrts-ets2",
-            storageBucket: "eraybrts-ets2.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456:web:abcdef"
-        };
-
-        // Not: Gerçek projede kendi Firebase config bilgilerinizle güncelleyebilirsiniz.
-        // Şimdilik yerel tarayıcı hafızası (localStorage) ile bulut simülasyonu çalışmaktadır.
-    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
@@ -147,8 +130,16 @@
                 <form onsubmit="handleAddMod(event)" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">Mod Adı</label>
-                        <input type="text" id="modName" required placeholder="Örn: Setra S 515 HD v2.5" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                        <input type="text" id="modName" required placeholder="Örn: Travego 15 SHD v2.0" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
                     </div>
+                    
+                    <!-- Kapak Resmi URL Kutusu -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Kapak Fotoğrafı (Resim Linki URL)</label>
+                        <input type="url" id="modImageUrl" placeholder="https://i.imgur.com/example.jpg veya hizliresim linki" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                        <span class="text-[10px] text-gray-500 mt-1 block">Boş bırakırsanız varsayılan ETS2 kapak fotosu gösterilir.</span>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-gray-400 mb-1">Kategori</label>
@@ -165,7 +156,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1">İndirme Linki (ShareMods / Google Drive vb.)</label>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">İndirme Linki (ShareMods / Drive vb.)</label>
                         <input type="url" id="modDownloadLink" required placeholder="https://sharemods.com/..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
@@ -214,25 +205,38 @@
 
             modsToRender.forEach((mod, index) => {
                 const card = document.createElement('div');
-                card.className = 'glass-card rounded-2xl p-6 flex flex-col justify-between border border-gray-800 hover:border-blue-500/50 transition-all group';
+                card.className = 'glass-card rounded-2xl overflow-hidden flex flex-col justify-between border border-gray-800 hover:border-blue-500/50 transition-all group';
                 
-                let deleteBtnHtml = isAdminLoggedIn ? `<button onclick="deleteMod(${index})" class="bg-red-500/20 hover:bg-red-600 text-red-400 hover:text-white p-2 rounded-xl transition-all border border-red-500/30" title="Modu Sil"><i class="fa-solid fa-trash-can"></i></button>` : '';
+                let deleteBtnHtml = isAdminLoggedIn ? `<button onclick="deleteMod(${index})" class="bg-red-500/80 hover:bg-red-600 text-white p-2 rounded-xl transition-all shadow-lg" title="Modu Sil"><i class="fa-solid fa-trash-can"></i></button>` : '';
 
                 let videoBtnHtml = mod.videoLink ? `<button onclick="openVideoModal('${mod.videoLink}')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2.5 px-4 rounded-xl text-sm font-medium transition-all text-center border border-gray-700 flex items-center justify-center space-x-2"><i class="fa-brands fa-youtube text-red-500"></i><span>İncele</span></button>` : '';
 
+                const imageUrl = mod.imageUrl || 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80';
+
                 card.innerHTML = `
                     <div>
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <span class="bg-blue-500/10 text-blue-400 text-xs font-semibold px-2.5 py-1 rounded-lg border border-blue-500/20">${mod.category}</span>
-                                <span class="text-xs text-gray-400 ml-2"><i class="fa-solid fa-gamepad"></i> ${mod.version}</span>
+                        <!-- Kapak Resmi Bölümü -->
+                        <div class="relative h-48 w-full overflow-hidden bg-gray-900">
+                            <img src="${imageUrl}" onerror="this.src='https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80'" alt="${mod.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
+                            <div class="absolute top-3 left-3 flex items-center space-x-2">
+                                <span class="bg-blue-600/90 text-white text-xs font-semibold px-2.5 py-1 rounded-lg backdrop-blur-sm">${mod.category}</span>
+                                <span class="bg-black/60 text-gray-300 text-xs px-2.5 py-1 rounded-lg backdrop-blur-sm"><i class="fa-solid fa-gamepad"></i> ${mod.version}</span>
                             </div>
-                            ${deleteBtnHtml}
+                            <div class="absolute top-3 right-3">
+                                ${deleteBtnHtml}
+                            </div>
                         </div>
-                        <h3 class="text-lg font-bold heading-font text-white group-hover:text-blue-400 transition-colors mb-2">${mod.name}</h3>
-                        <p class="text-gray-400 text-sm mb-4 line-clamp-3">${mod.description}</p>
+
+                        <!-- Detaylar -->
+                        <div class="p-5">
+                            <h3 class="text-lg font-bold heading-font text-white group-hover:text-blue-400 transition-colors mb-2">${mod.name}</h3>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">${mod.description}</p>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2 pt-4 border-t border-gray-800/80">
+
+                    <!-- Alt Butonlar -->
+                    <div class="p-5 pt-0 flex items-center gap-2">
                         <a href="${mod.downloadLink}" target="_blank" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 px-4 rounded-xl text-sm font-semibold transition-all text-center glow-btn flex items-center justify-center space-x-2"><i class="fa-solid fa-download"></i><span>İndir</span></a>
                         ${videoBtnHtml}
                     </div>
@@ -294,6 +298,7 @@
             e.preventDefault();
             const newMod = {
                 name: document.getElementById('modName').value,
+                imageUrl: document.getElementById('modImageUrl').value,
                 category: document.getElementById('modCategory').value,
                 version: document.getElementById('modVersion').value,
                 downloadLink: document.getElementById('modDownloadLink').value,
@@ -341,7 +346,7 @@
             document.getElementById('videoModal').classList.add('hidden');
         }
 
-        // Sayfa açıldığında modları yükle
+        // Sayfa açıldığında çalıştır
         window.onload = () => {
             renderMods();
         };
